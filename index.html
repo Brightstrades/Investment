@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Investment Dashboard</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --secondary-color: #6c757d;
+      --success-color: #198754;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --dark-color: #212529;
+      --light-color: #f8f9fa;
+      --sidebar-width: 280px;
+      --sidebar-collapsed-width: 80px;
+      --primary: #0d6efd;
+      --sidebar-bg: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+      --sidebar-z: 2000;
+      --sidebar-radius: 0 20px 20px 0;
+      --profile-pic-size: 56px;
+      --profile-pic-collapsed: 0px;
+      --transition: 0.3s cubic-bezier(.4,0,.2,1);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+      color: white;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      z-index: 1000;
+      transition: all 0.3s ease;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed-width);
+    }
+
+    .sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(255,255,255,0.2);
+      transform: scale(1.1);
+    }
+
+    .profile-section {
+      padding: 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.2);
+      object-fit: cover;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .profile-pic:hover {
+      transform: scale(1.05);
+      border-color: var(--primary-color);
+    }
+
+    .profile-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .profile-email {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .sidebar.collapsed .profile-name,
+    .sidebar.collapsed .profile-email {
+      display: none;
+    }
+
+    .nav-menu {
+      padding: 1rem 0;
+    }
+
+    .nav-item {
+      margin: 0.25rem 1rem;
+    }
+
+    .nav-link {
+      color: rgba(255,255,255,0.8);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: white;
+      background: rgba(255,255,255,0.1);
+      transform: translateX(5px);
+    }
+
+    .nav-link i {
+      width: 20px;
+      margin-right: 0.75rem;
+      font-size: 1.1rem;
+    }
+
+    .sidebar.collapsed .nav-link span {
+      display: none;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      transition: margin-left 0.3s ease;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-collapsed-width);
+    }
+
+    /* Dashboard Cards */
+    .stats-card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stats-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+
+    .stats-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    }
+
+    .stats-card.investments::before { background: linear-gradient(90deg, #1e88e5, #42a5f5); }
+    .stats-card.deposits::before { background: linear-gradient(90deg, #43a047, #66bb6a); }
+    .stats-card.profits::before { background: linear-gradient(90deg, #fbc02d, #ffd54f); }
+    .stats-card.withdrawals::before { background: linear-gradient(90deg, #e53935, #ef5350); }
+
+    .stats-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      margin-bottom: 1rem;
+    }
+
+    .stats-card.investments .stats-icon { background: linear-gradient(135deg, #1e88e5, #42a5f5); }
+    .stats-card.deposits .stats-icon { background: linear-gradient(135deg, #43a047, #66bb6a); }
+    .stats-card.profits .stats-icon { background: linear-gradient(135deg, #fbc02d, #ffd54f); }
+    .stats-card.withdrawals .stats-icon { background: linear-gradient(135deg, #e53935, #ef5350); }
+
+    .stats-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: var(--dark-color);
+    }
+
+    .stats-label {
+      font-size: 0.9rem;
+      color: var(--secondary-color);
+      font-weight: 500;
+    }
+
+    .stats-change {
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    .stats-change i {
+      margin-right: 0.25rem;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2.5rem 2rem 2.5rem 2rem;
+      box-shadow: 0 4px 24px rgba(30,136,229,0.07);
+      border: 1px solid #e3e6f0;
+      margin: 2.5rem 0;
+      max-width: 100%;
+      min-width: 0;
+      min-height: 350px;
+      max-height: 500px;
+      height: auto;
+      overflow: visible;
+      position: relative;
+    }
+    .chart-container canvas {
+      min-height: 320px;
+      max-height: 480px;
+      width: 100% !important;
+      background: transparent;
+      border-radius: 10px;
+      box-shadow: none;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--dark-color);
+      margin: 0;
+    }
+
+    /* Welcome Section */
+    .welcome-section {
+      background: rgba(255,255,255,0.95);
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .welcome-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .welcome-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--primary-color), #42a5f5);
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      margin-right: 1rem;
+    }
+
+    .welcome-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--dark-color);
+      margin: 0;
+    }
+
+    .welcome-text {
+      color: var(--secondary-color);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    /* Footer */
+    .footer {
+      background: rgba(255,255,255,0.95);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+      margin: 0 0.5rem;
+      transition: color 0.3s ease;
+    }
+
+    .footer a:hover {
+      color: var(--dark-color);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: var(--sidebar-width);
+        left: 0;
+        top: 0;
+        height: 100vh;
+        transform: translateX(-100%);
+        position: fixed;
+        z-index: var(--sidebar-z);
+        box-shadow: 2px 0 16px rgba(0,0,0,0.18);
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0 !important;
+        padding: 1rem !important;
+      }
+      .mobile-toggle {
+        display: flex !important;
+      }
+      .sidebar-toggle {
+        display: none !important;
+      }
+      .stats-card {
+        margin-bottom: 1rem;
+      }
+    }
+
+    /* Loading Animation */
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Smooth transitions */
+    * {
+      transition: all 0.3s ease;
+    }
+
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: 1.1rem;
+      left: 1.1rem;
+      z-index: 2100;
+      background: #2c3e50;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: background var(--transition);
+    }
+    .mobile-toggle:hover {
+      background: #34495e;
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-toggle" onclick="toggleMobileSidebar()"><i class="bi bi-list"></i></button>
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+    </div>
+    
+    <div class="profile-section">
+      <img src="https://randomuser.me/api/portraits/men/32.jpg" class="profile-pic" alt="Profile Picture">
+      <div class="profile-name">Hi Mike!</div>
+      <div class="profile-email">mike23@gmail.com</div>
+    </div>
+    
+    <div class="nav-menu">
+      <div class="nav-item">
+        <a href="one page invest.html" class="nav-link active">
+          <i class="bi bi-house-door"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="Withdraw.html" class="nav-link">
+          <i class="bi bi-cash-stack"></i>
+          <span>Withdrawals</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="chat.html" class="nav-link">
+          <i class="bi bi-chat-dots"></i>
+          <span>Support Chat</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content" id="main-content">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 mb-1 text-white">Investment Dashboard</h1>
+        <p class="text-white-50 mb-0">Welcome back! Here's your financial overview</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-light btn-sm">
+          <i class="bi bi-bell"></i>
+        </button>
+        <button class="btn btn-outline-light btn-sm">
+          <i class="bi bi-gear"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="stats-card investments">
+          <div class="stats-icon">
+            <i class="bi bi-graph-up"></i>
+          </div>
+          <div class="stats-value">Platinum</div>
+          <div class="stats-label">Investment Plan</div>
+          <div class="stats-change text-success small">
+            <i class="bi bi-arrow-up"></i> +15.2%
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="stats-card deposits">
+          <div class="stats-icon">
+            <i class="bi bi-bank"></i>
+          </div>
+          <div class="stats-value">$10,000</div>
+          <div class="stats-label">Total Deposits</div>
+          <div class="stats-change text-success small">
+            <i class="bi bi-arrow-up"></i> +8.5%
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="stats-card profits">
+          <div class="stats-icon">
+            <i class="bi bi-trending-up"></i>
+          </div>
+          <div class="stats-value">$39,700</div>
+          <div class="stats-label">Total Profits</div>
+          <div class="stats-change text-success small">
+            <i class="bi bi-arrow-up"></i> +23.7%
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="stats-card withdrawals">
+          <div class="stats-icon">
+            <i class="bi bi-cash-coin"></i>
+          </div>
+          <div class="stats-value">$0</div>
+          <div class="stats-label">Withdrawals</div>
+          <div class="stats-change text-muted small">
+            <i class="bi bi-dash"></i> No activity
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3 class="chart-title">Investment Performance</h3>
+        <div class="d-flex align-items-center gap-2">
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary btn-sm active" onclick="updateChart('7D')">7D</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateChart('30D')">30D</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateChart('90D')">90D</button>
+          </div>
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <i class="bi bi-download"></i> Export
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" onclick="exportChart('png')">PNG Image</a></li>
+              <li><a class="dropdown-item" href="#" onclick="exportChart('pdf')">PDF Report</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <canvas id="investmentChart" height="100"></canvas>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="welcome-section">
+          <div class="welcome-header">
+            <div class="welcome-icon">
+              <i class="bi bi-emoji-smile"></i>
+            </div>
+            <div>
+              <h3 class="welcome-title">Welcome Back, Mike!</h3>
+              <p class="text-muted mb-0">Your financial journey continues here</p>
+            </div>
+          </div>
+          <div class="welcome-text">
+            <p class="mb-3">
+              This is your personalized investment dashboard—your command center to monitor, manage, and grow your portfolio with confidence. 
+              Here, you can track your active investments, profits, and pending withdrawals in real time.
+            </p>
+            <p class="mb-3">
+              Access secure tools to withdraw funds, manage your profile, and stay updated on your investment progress. 
+              Reach out to our support team anytime for quick assistance.
+            </p>
+            <p class="mb-0">
+              <strong>Stay informed. Stay empowered. Let's grow your wealth together.</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="welcome-section">
+          <div class="welcome-header">
+            <div class="welcome-icon">
+              <i class="bi bi-lightning"></i>
+            </div>
+            <div>
+              <h3 class="welcome-title">Quick Actions</h3>
+              <p class="text-muted mb-0">Manage your investments</p>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <button class="btn btn-primary w-100" onclick="window.location.href='Withdraw.html'">
+                <i class="bi bi-cash-stack me-2"></i>Withdraw
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-outline-primary w-100" onclick="window.location.href='chat.html'">
+                <i class="bi bi-chat-dots me-2"></i>Support
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-outline-success w-100" onclick="showInvestmentModal()">
+                <i class="bi bi-plus-circle me-2"></i>New Investment
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-outline-info w-100" onclick="showReportModal()">
+                <i class="bi bi-file-earmark-text me-2"></i>Reports
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="row">
+        <div class="col-md-6">
+          <p class="mb-2">&copy; 2025 Smartway Investment. All rights reserved.</p>
+        </div>
+        <div class="col-md-6">
+          <p class="mb-2">
+            <a href="terms.html">Terms of Service</a> |
+            <a href="privacy.html">Privacy Policy</a> |
+            <a href="mailto:support@smartway.com">Contact Support</a>
+          </p>
+        </div>
+      </div>
+      <p class="mb-0 small">Developed with ❤️ by Smartway Investment Team</p>
+    </footer>
+  </main>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Sidebar Toggle Function
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const main = document.getElementById('main-content');
+      sidebar.classList.toggle('collapsed');
+    }
+
+    // Mobile Sidebar Toggle
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('show');
+    }
+
+    // Enhanced Chart Configuration
+    const ctx = document.getElementById('investmentChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 420);
+    gradient.addColorStop(0, 'rgba(30, 136, 229, 0.18)');
+    gradient.addColorStop(1, 'rgba(30, 136, 229, 0.01)');
+
+    const investmentChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+          label: 'Investment Value',
+          data: [12000, 12500, 12300, 13000, 13500, 14000, 13800],
+          borderColor: '#1e88e5',
+          backgroundColor: gradient,
+          tension: 0.5,
+          fill: true,
+          pointRadius: 7,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#1e88e5',
+          pointBorderWidth: 3,
+          pointHoverRadius: 11,
+          pointHoverBackgroundColor: '#1e88e5',
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 4,
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(30,136,229,0.95)',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: '#1e88e5',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: false,
+            callbacks: {
+              label: function(context) {
+                return `Value: $${context.parsed.y.toLocaleString()}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false,
+              drawBorder: false
+            },
+            ticks: {
+              color: '#b0b8c1',
+              font: { size: 13 }
+            }
+          },
+          y: {
+            grid: {
+              color: 'rgba(30,136,229,0.06)',
+              drawBorder: false
+            },
+            ticks: {
+              color: '#b0b8c1',
+              font: { size: 13 },
+              callback: function(value) {
+                return '$' + value.toLocaleString();
+              }
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        }
+      }
+    });
+
+    // Add loading animation
+    document.addEventListener('DOMContentLoaded', function() {
+      // Simulate loading
+      setTimeout(() => {
+        document.body.classList.remove('loading');
+      }, 500);
+    });
+
+    // Add smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // Add card hover effects
+    document.querySelectorAll('.stats-card').forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-8px) scale(1.02)';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+      });
+    });
+
+    // Chart update function
+    function updateChart(period) {
+      // Update active button
+      document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      // Simulate data update based on period
+      let newData = [];
+      let newLabels = [];
+      
+      if (period === '7D') {
+        newLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        newData = [12000, 12500, 12300, 13000, 13500, 14000, 13800];
+      } else if (period === '30D') {
+        newLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+        newData = [12000, 13500, 14200, 13800];
+      } else if (period === '90D') {
+        newLabels = ['Month 1', 'Month 2', 'Month 3'];
+        newData = [12000, 15000, 13800];
+      }
+      
+      investmentChart.data.labels = newLabels;
+      investmentChart.data.datasets[0].data = newData;
+      investmentChart.update();
+    }
+
+    // Export chart function
+    function exportChart(type) {
+      if (type === 'png') {
+        const link = document.createElement('a');
+        link.download = 'investment-chart.png';
+        link.href = investmentChart.toBase64Image();
+        link.click();
+      } else if (type === 'pdf') {
+        alert('PDF export functionality would be implemented here');
+      }
+    }
+
+    // Modal functions
+    function showInvestmentModal() {
+      alert('New Investment modal would open here with form fields for amount, plan selection, etc.');
+    }
+
+    function showReportModal() {
+      alert('Reports modal would open here with options for generating detailed investment reports.');
+    }
+
+    // Add notification system
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+      notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+    }
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+          case 'w':
+            e.preventDefault();
+            window.location.href = 'Withdraw.html';
+            break;
+          case 'c':
+            e.preventDefault();
+            window.location.href = 'chat.html';
+            break;
+          case 'd':
+            e.preventDefault();
+            toggleSidebar();
+            break;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
