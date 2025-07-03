@@ -1,12 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Withdraw</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Withdraw Funds</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-width: 280px;
+      --sidebar-collapsed-width: 80px;
+      --sidebar-bg: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+      --sidebar-z: 2000;
+      --profile-pic-size: 56px;
+      --transition: 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      color: white;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      z-index: 1000;
+      transition: all 0.3s ease;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    .sidebar.collapsed { width: var(--sidebar-collapsed-width); }
+    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+    .sidebar-toggle { position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+    .sidebar-toggle:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+    .profile-section { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); object-fit: cover; margin-bottom: 1rem; transition: all 0.3s ease; }
+    .profile-pic:hover { transform: scale(1.05); border-color: #0d6efd; }
+    .profile-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.25rem; }
+    .profile-email { font-size: 0.85rem; opacity: 0.8; }
+    .sidebar.collapsed .profile-name, .sidebar.collapsed .profile-email { display: none; }
+    .nav-menu { padding: 1rem 0; }
+    .nav-item { margin: 0.25rem 1rem; }
+    .nav-link { color: rgba(255,255,255,0.8); padding: 0.75rem 1rem; border-radius: 8px; transition: all 0.3s ease; display: flex; align-items: center; text-decoration: none; }
+    .nav-link:hover, .nav-link.active { color: white; background: rgba(255,255,255,0.1); transform: translateX(5px); }
+    .nav-link i { width: 20px; margin-right: 0.75rem; font-size: 1.1rem; }
+    .sidebar.collapsed .nav-link span { display: none; }
+    .main-content { margin-left: var(--sidebar-width); transition: margin-left 0.3s ease; min-height: 100vh; padding: 2rem; }
+    .sidebar.collapsed ~ .main-content { margin-left: var(--sidebar-collapsed-width); }
+    @media (max-width: 768px) {
+      .sidebar { width: var(--sidebar-width); left: 0; top: 0; height: 100vh; transform: translateX(-100%); position: fixed; z-index: var(--sidebar-z); box-shadow: 2px 0 16px rgba(0,0,0,0.18); }
+      .sidebar.show { transform: translateX(0); }
+      .main-content { margin-left: 0 !important; padding: 1rem !important; }
+      .mobile-toggle { display: flex !important; }
+      .sidebar-toggle { display: none !important; }
+    }
+    .mobile-toggle { display: none; position: fixed; top: 1.1rem; left: 1.1rem; z-index: 2100; background: #2c3e50; color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: background var(--transition); }
+    .mobile-toggle:hover { background: #34495e; }
+  </style>
 </head>
 <body>
-  <h1>Withdraw Page</h1>
-  <p>This is the withdraw page. Content coming soon.</p>
+  <button class="mobile-toggle" onclick="toggleMobileSidebar()"><i class="bi bi-list"></i></button>
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+    </div>
+    <div class="profile-section">
+      <img src="https://randomuser.me/api/portraits/men/32.jpg" class="profile-pic" alt="Profile Picture">
+      <div class="profile-name">Hi Mike!</div>
+      <div class="profile-email">mike23@gmail.com</div>
+    </div>
+    <div class="nav-menu">
+      <div class="nav-item">
+        <a href="index.html" class="nav-link">
+          <i class="bi bi-house-door"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="withdraw.html" class="nav-link active">
+          <i class="bi bi-cash-stack"></i>
+          <span>Withdrawals</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="chat.html" class="nav-link">
+          <i class="bi bi-chat-dots"></i>
+          <span>Support Chat</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+  <!-- Main Content -->
+  <main class="main-content" id="main-content">
+    <div class="container-fluid">
+      <!-- Stats Cards (Bootstrap Only) -->
+      <div class="row justify-content-center mb-4">
+        <div class="col-lg-12">
+          <div class="row g-4">
+            <div class="col-xl-3 col-md-6">
+              <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                  <div class="mb-2">
+                    <span class="bg-success bg-opacity-75 text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:44px;height:44px;font-size:1.5rem;"><i class="bi bi-bank"></i></span>
+                  </div>
+                  <h5 class="card-title mb-1">$10,000</h5>
+                  <div class="text-muted small mb-1">Deposit</div>
+                  <div class="text-success small"><i class="bi bi-arrow-up"></i> +8.5%</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                  <div class="mb-2">
+                    <span class="bg-warning bg-opacity-75 text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:44px;height:44px;font-size:1.5rem;"><i class="bi bi-trending-up"></i></span>
+                  </div>
+                  <h5 class="card-title mb-1">$39,700</h5>
+                  <div class="text-muted small mb-1">Profit</div>
+                  <div class="text-success small"><i class="bi bi-arrow-up"></i> +23.7%</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                  <div class="mb-2">
+                    <span class="bg-danger bg-opacity-75 text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:44px;height:44px;font-size:1.5rem;"><i class="bi bi-cash-coin"></i></span>
+                  </div>
+                  <h5 class="card-title mb-1">$0</h5>
+                  <div class="text-muted small mb-1">Withdrawals</div>
+                  <div class="text-danger small"><i class="bi bi-arrow-down"></i> 0%</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                  <div class="mb-2">
+                    <span class="bg-secondary bg-opacity-75 text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:44px;height:44px;font-size:1.5rem;"><i class="bi bi-percent"></i></span>
+                  </div>
+                  <h5 class="card-title mb-1">$15,780</h5>
+                  <div class="text-muted small mb-1">Withdrawal Fee</div>
+                  <div class="text-muted small"><i class="bi bi-dash"></i> Flat fee</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- End Stats Cards -->
+      <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-10">
+          <div class="card shadow-lg border-0 rounded-4 mt-5">
+            <div class="card-body p-5">
+              <h2 class="mb-4 text-center">Withdraw Funds</h2>
+              <form>
+                <div class="mb-3">
+                  <label for="withdrawAmount" class="form-label">Amount</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                    <input type="number" class="form-control" id="withdrawAmount" placeholder="Enter amount" min="1" required>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="withdrawCrypto" class="form-label">Select Crypto</label>
+                  <select class="form-select" id="withdrawCrypto" required>
+                    <option value="" disabled selected>Select cryptocurrency</option>
+                    <option value="BTC">Bitcoin (BTC)</option>
+                    <option value="USDT">Tether (USDT)</option>
+                    <option value="LTC">Litecoin (LTC)</option>
+                    <option value="ETH">Ethereum (ETH)</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="withdrawNote" class="form-label">Notes (optional)</label>
+                  <textarea class="form-control" id="withdrawNote" rows="2" placeholder="Any additional info..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">Submit Withdrawal</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    // Sidebar toggle for desktop
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+      document.getElementById('main-content').classList.toggle('collapsed');
+    }
+    // Sidebar toggle for mobile
+    function toggleMobileSidebar() {
+      document.getElementById('sidebar').classList.toggle('show');
+    }
+    // Close sidebar on link click (mobile)
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', function() {
+        if(window.innerWidth <= 768) {
+          document.getElementById('sidebar').classList.remove('show');
+        }
+      });
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 
